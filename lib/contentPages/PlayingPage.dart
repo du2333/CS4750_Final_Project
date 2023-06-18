@@ -1,3 +1,4 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 
 class PlayingPage extends StatefulWidget {
@@ -10,9 +11,15 @@ class PlayingPage extends StatefulWidget {
 class _PlayingPageState extends State<PlayingPage> {
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       body: Center(
-        child: Text("It's playing page"),
+        child: IconButton(
+          icon: Icon(Icons.play_circle),
+          onPressed: () async {
+            final player = AudioPlayer();
+            await player.play(AssetSource('1.mp3'));
+          },
+        ),
       ),
     );
   }
