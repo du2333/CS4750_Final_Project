@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:cloudjams/contentPages/LibraryPage.dart';
-import 'package:cloudjams/contentPages/PlayListPage.dart';
-import 'package:cloudjams/contentPages/PlayingPage.dart';
+import 'package:cloudjams/screens/LibraryPage.dart';
+import 'package:cloudjams/screens/PlayListPage.dart';
+import 'package:cloudjams/screens/PlayingPage.dart';
 
 class TopBarNavigation extends StatelessWidget {
   const TopBarNavigation({super.key});
@@ -16,12 +16,15 @@ class TopBarNavigation extends StatelessWidget {
           title: const TabBar(
             tabs: <Widget>[
               Tab(
+                //TODO 换图标
                 child: Text("PlayList"),
               ),
               Tab(
+                //TODO 换图标
                 child: Text("Playing"),
               ),
               Tab(
+                //TODO 换图标
                 child: Text("Library"),
               ),
             ],
