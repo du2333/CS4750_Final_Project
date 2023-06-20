@@ -1,6 +1,6 @@
 class Song{
-  String? name;
-  String? url;
+  final String? title;
+  final String? artwork;
 
-  Song(this.name, this.url);
+  Song({this.title, this.artwork});
 }
