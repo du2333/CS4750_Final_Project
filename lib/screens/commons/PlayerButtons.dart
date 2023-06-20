@@ -7,9 +7,9 @@ class PlayerButtons extends StatelessWidget {
   final AudioPlayer _player;
 
   //根据播放器状态来渲染对应的按钮样式
-  Widget _playerButton(PlayerState playerState) {
+  Widget _playerButton(PlayerState? playerState) {
     //获取状态
-    final processingState = playerState.processingState;
+    final processingState = playerState?.processingState;
     //判断如果加载或缓冲则变成缓冲图标
     if (processingState == ProcessingState.loading ||
         processingState == ProcessingState.buffering) {
@@ -65,7 +65,10 @@ class PlayerButtons extends StatelessWidget {
     return IconButton(
       icon: Icon(Icons.skip_previous),
       onPressed: () {
-        _player.hasPrevious ? _player.seekToPrevious() : null;
+        if(_player.hasPrevious) {
+          _player.seekToPrevious();
+          _player.play();
+        }
       },
     );
   }
@@ -74,7 +77,10 @@ class PlayerButtons extends StatelessWidget {
     return IconButton(
       icon: Icon(Icons.skip_next),
       onPressed: () {
-        _player.hasNext ? _player.seekToNext() : null;
+        if(_player.hasNext) {
+          _player.seekToNext();
+          _player.play();
+        }
       },
     );
   }

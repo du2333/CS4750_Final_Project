@@ -2,5 +2,5 @@ class Song{
   final String? title;
   final String? artwork;
 
-  Song({this.title, this.artwork});
+  Song({required this.title, this.artwork = 'assets/images/music-placeholder.png'});
 }

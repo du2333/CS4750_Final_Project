@@ -18,7 +18,7 @@ class Playlist extends StatelessWidget {
               for (var i = 0; i < sequence.length; i++)
                 ListTile(
                   selected: i == state?.currentIndex,
-                  //TODO 歌曲封面 leading: ,
+                  leading: Image.asset(sequence[i].tag.artwork),
                   title: Text(sequence[i].tag.title),
                   onTap: () {
                     //点击播放相应歌曲
