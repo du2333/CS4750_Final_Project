@@ -6,6 +6,7 @@ class Playlist extends StatelessWidget {
 
   final AudioPlayer _player;
 
+  //TODO Refactor playlist using SongModel to the artwork of the song
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<SequenceState?>(

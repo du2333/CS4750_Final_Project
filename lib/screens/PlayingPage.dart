@@ -15,7 +15,14 @@ class _PlayingPageState extends State<PlayingPage> {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: PlayerButtons(widget._player),
+      child: Column(
+        children: [
+          Container(
+            //TODO Music Artwork
+          ),
+          PlayerButtons(widget._player),
+        ],
+      ),
     );
   }
 }

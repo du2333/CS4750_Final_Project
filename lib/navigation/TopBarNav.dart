@@ -5,6 +5,7 @@ import 'package:cloudjams/screens/LibraryPage.dart';
 import 'package:cloudjams/screens/PlayListPage.dart';
 import 'package:cloudjams/screens/PlayingPage.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:on_audio_query/on_audio_query.dart';
 
 import '../models/Song.dart';
 
@@ -17,68 +18,21 @@ class TopBarNavigation extends StatefulWidget {
 
 class _TopBarNavigationState extends State<TopBarNavigation> {
   late AudioPlayer _player;
+  late OnAudioQuery _audioQuery;
 
   @override
   void initState() {
     super.initState();
     // 初始化播放器
     _player = AudioPlayer();
+    //初始化获取歌曲信息插件
+    _audioQuery = OnAudioQuery();
+    //获取读写权限
+    requestStoragePermission();
 
-    //增加播放列表
-    _player
-        .setAudioSource(ConcatenatingAudioSource(children: [
-      AudioSource.asset('assets/audios/Call of Silence 泽野弘之.mp3',
-          tag: Song(
-            title: 'Call of Silence 泽野弘之',
-            //artwork: '',
-          )),
-      AudioSource.asset('assets/audios/Curtain_Call_-_清水翔太.mp3',
-          tag: Song(
-            title: 'Curtain_Call_-_清水翔太',
-            //artwork: '',
-          )),
-      AudioSource.asset('assets/audios/Departures ~あなたにおくるアイの歌~ - EGOIST.mp3',
-          tag: Song(
-            title: 'Departures ~あなたにおくるアイの歌~ - EGOIST',
-            //artwork: '',
-          )),
-      AudioSource.asset('assets/audios/from Y to Y - H△G.mp3',
-          tag: Song(
-            title: 'from Y to Y - H△G',
-            //artwork: '',
-          )),
-      AudioSource.asset('assets/audios/glow-H△G.mp3',
-          tag: Song(
-            title: 'glow-H△G',
-            //artwork: '',
-          )),
-      AudioSource.asset('assets/audios/gravityWall - Tielle.mp3',
-          tag: Song(
-            title: 'gravityWall - Tielle',
-            // artwork: '',
-          )),
-      AudioSource.asset('assets/audios/halca - センチメンタルクライシス.mp3',
-          tag: Song(
-            title: 'halca - センチメンタルクライシス',
-            // artwork: '',
-          )),
-      AudioSource.asset('assets/audios/Headlight - MONKEY MAJIK.mp3',
-          tag: Song(
-            title: 'Headlight - MONKEY MAJIK',
-            // artwork: '',
-          )),
-      AudioSource.asset('assets/audios/inside you - milet.mp3',
-          tag: Song(
-            title: 'inside you - milet',
-            // artwork: '',
-          )),
-      AudioSource.asset('assets/audios/Voices_of_the_Chord.mp3',
-          tag: Song(
-            title: 'Voices_of_the_Chord',
-            // artwork: '',
-          )),
-    ]))
-        .catchError((error) {
+
+    //添加播放列表
+    _player.setAudioSource(Song.playlist).catchError((error) {
       log("An error occurred $error");
     });
   }
@@ -114,14 +68,26 @@ class _TopBarNavigationState extends State<TopBarNavigation> {
             ],
           ),
         ),
-        body:TabBarView(
+        body: TabBarView(
           children: [
             PlayListPage(_player),
             PlayingPage(_player),
-            LibraryPage(),
+            LibraryPage(_audioQuery, _player),
           ],
         ),
       ),
     );
   }
+
+  Future<void> requestStoragePermission() async {
+    bool permissionStatus = await _audioQuery.permissionsStatus();
+    if(!permissionStatus) {
+      await _audioQuery.permissionsRequest();
+    }
+
+    setState(() {
+
+    });
+  }
+
 }
