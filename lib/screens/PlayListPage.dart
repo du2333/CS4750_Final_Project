@@ -2,8 +2,6 @@ import 'package:cloudjams/screens/commons/Playlist.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 
-import 'commons/PlayerButtons.dart';
-
 class PlayListPage extends StatefulWidget {
   const PlayListPage(this._player, {super.key});
 
@@ -23,7 +21,6 @@ class _PlayListPageState extends State<PlayListPage> {
           child: Column(
             children: [
               Expanded(child: Playlist(widget._player)),
-              PlayerButtons(widget._player)
             ],
           ),
         ),

@@ -67,10 +67,10 @@ class PlayerButtons extends StatelessWidget {
   Widget _previousButton() {
     return IconButton(
       icon: Icon(Icons.skip_previous),
+      iconSize: 54.0,
       onPressed: () {
         if (_player.hasPrevious) {
           _player.seekToPrevious();
-          _player.play();
         }
       },
     );
@@ -79,10 +79,10 @@ class PlayerButtons extends StatelessWidget {
   Widget _nextButton() {
     return IconButton(
       icon: Icon(Icons.skip_next),
+      iconSize: 54.0,
       onPressed: () {
         if (_player.hasNext) {
           _player.seekToNext();
-          _player.play();
         }
       },
     );
@@ -129,7 +129,7 @@ class PlayerButtons extends StatelessWidget {
         Column(
           children: [
             Container(
-              margin: const EdgeInsets.only(top: 4.0, bottom: 4.0, left: 16.0, right: 16.0),
+              margin: const EdgeInsets.only(top: 4.0, left: 32.0, right: 32.0),
               child: StreamBuilder<DurationStatusBar>(
                 stream: _durationStateStream,
                 builder: (context, snapshot) {

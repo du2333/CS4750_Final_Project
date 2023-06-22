@@ -1,4 +1,6 @@
-import 'package:cloudjams/screens/commons/PlayerButtons.dart';
+import 'dart:developer';
+
+import 'package:cloudjams/models/Playerlist.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:on_audio_query/on_audio_query.dart';
@@ -43,8 +45,8 @@ class _LibraryPageState extends State<LibraryPage> {
                 itemCount: item.data!.length,
                 itemBuilder: (context, index) {
                   return Container(
-                    margin:
-                        const EdgeInsets.only(top: 15.0, left: 12.0, right: 16.0),
+                    margin: const EdgeInsets.only(
+                        top: 15.0, left: 12.0, right: 16.0),
                     child: ListTile(
                       title: Text(item.data![index].title),
                       subtitle: Text(
@@ -58,11 +60,17 @@ class _LibraryPageState extends State<LibraryPage> {
                         id: item.data![index].id,
                         type: ArtworkType.AUDIO,
                       ),
-                      onTap: () {
-                        
-                        String? uri = item.data![index].uri;
-                        widget._player.setAudioSource(AudioSource.uri(Uri.parse(uri!)));
-                        widget._player.play();
+                      onTap: () async {
+                        //TODO 先把本地曲库作为播放列表
+                        //首先创建播放列表然后添加给播放器
+                        var playlist = Playerlist.createPlaylist(item.data!);
+                        await widget._player
+                            .setAudioSource(playlist, initialIndex: index)
+                            .catchError((error) {
+                          log('$error');
+                        });
+                        //然后播放点击的歌曲
+                        await widget._player.play();
                       },
                     ),
                   );
@@ -70,7 +78,6 @@ class _LibraryPageState extends State<LibraryPage> {
           },
         ),
       ),
-      PlayerButtons(widget._player),
     ]);
   }
 }

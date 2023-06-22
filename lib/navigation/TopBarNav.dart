@@ -1,13 +1,11 @@
-import 'dart:developer';
-
-import 'package:flutter/material.dart';
 import 'package:cloudjams/screens/LibraryPage.dart';
 import 'package:cloudjams/screens/PlayListPage.dart';
 import 'package:cloudjams/screens/PlayingPage.dart';
+import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
-import '../models/Song.dart';
+import '../screens/commons/PlayerButtons.dart';
 
 class TopBarNavigation extends StatefulWidget {
   const TopBarNavigation({super.key});
@@ -31,10 +29,10 @@ class _TopBarNavigationState extends State<TopBarNavigation> {
     requestStoragePermission();
 
 
-    //添加播放列表
-    _player.setAudioSource(Song.playlist).catchError((error) {
-      log("An error occurred $error");
-    });
+    // //添加播放列表
+    // _player.setAudioSource().catchError((error) {
+    //   log("An error occurred $error");
+    // });
   }
 
   //Destructor
@@ -68,11 +66,22 @@ class _TopBarNavigationState extends State<TopBarNavigation> {
             ],
           ),
         ),
-        body: TabBarView(
+        body: Stack(
           children: [
-            PlayListPage(_player),
-            PlayingPage(_player),
-            LibraryPage(_audioQuery, _player),
+            TabBarView(
+              children: [
+                //TODO 保存并读取播放列表
+                PlayListPage(_player),
+                PlayingPage(_player),
+                LibraryPage(_audioQuery, _player),
+              ],
+            ),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 20,
+              child: PlayerButtons(_player),
+            )
           ],
         ),
       ),
