@@ -5,42 +5,47 @@ import 'package:just_audio/just_audio.dart';
 import 'package:rxdart/rxdart.dart';
 
 class PlayerButtons extends StatelessWidget {
-  const PlayerButtons(this._player, {super.key});
+  const PlayerButtons(this._player, {super.key, required this.onTap});
+
+  final Function onTap;
 
   final AudioPlayer _player;
+
+  //当前播放列表按钮
+  Widget _currentPlayingButton() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.playlist_play_rounded),
+          iconSize: 36,
+          onPressed: () => onTap(),
+        ),
+      ],
+    );
+  }
 
   //根据播放器状态来渲染对应的按钮样式
   Widget _playerButton(PlayerState? playerState) {
     //获取状态
     final processingState = playerState?.processingState;
-    //判断如果加载或缓冲则变成缓冲图标
-    if (processingState == ProcessingState.loading ||
-        processingState == ProcessingState.buffering) {
-      return Container(
-        margin: EdgeInsets.all(8.0),
-        width: 64.0,
-        height: 64.0,
-        //缓冲图标
-        child: const CircularProgressIndicator(),
-      );
-      //如果没有在播放，则换成播放图标，并且把事件绑定成播放
-    } else if (!_player.playing) {
+    if (processingState == null || !_player.playing) {
       return IconButton(
         onPressed: _player.play,
-        icon: Icon(Icons.play_arrow),
+        icon: const Icon(Icons.play_arrow),
         iconSize: 64.0,
       );
     } else if (processingState != ProcessingState.completed) {
       return IconButton(
         onPressed: _player.pause,
-        icon: Icon(Icons.pause),
+        icon: const Icon(Icons.pause),
         iconSize: 64.0,
       );
     } else {
       return IconButton(
         onPressed: () =>
             _player.seek(Duration.zero, index: _player.effectiveIndices?.first),
-        icon: Icon(Icons.replay),
+        icon: const Icon(Icons.replay),
         iconSize: 64.0,
       );
     }
@@ -49,7 +54,9 @@ class PlayerButtons extends StatelessWidget {
   //context用来获取当前主题色
   Widget _shuffleButton(bool isEnabled) {
     return IconButton(
-      icon: isEnabled ? Icon(Icons.shuffle_on_outlined) : Icon(Icons.shuffle),
+      icon: isEnabled
+          ? const Icon(Icons.shuffle_on_outlined)
+          : const Icon(Icons.shuffle),
       //改成异步方法，才能被StreamBuilder异步更新UI
       onPressed: () async {
         //获取相反的状态
@@ -66,7 +73,7 @@ class PlayerButtons extends StatelessWidget {
 
   Widget _previousButton() {
     return IconButton(
-      icon: Icon(Icons.skip_previous),
+      icon: const Icon(Icons.skip_previous),
       iconSize: 54.0,
       onPressed: () {
         if (_player.hasPrevious) {
@@ -78,7 +85,7 @@ class PlayerButtons extends StatelessWidget {
 
   Widget _nextButton() {
     return IconButton(
-      icon: Icon(Icons.skip_next),
+      icon: const Icon(Icons.skip_next),
       iconSize: 54.0,
       onPressed: () {
         if (_player.hasNext) {
@@ -123,74 +130,75 @@ class PlayerButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        //进度条
-        Column(
-          children: [
-            Container(
-              margin: const EdgeInsets.only(top: 4.0, left: 32.0, right: 32.0),
-              child: StreamBuilder<DurationStatusBar>(
-                stream: _durationStateStream,
-                builder: (context, snapshot) {
-                  final durationState = snapshot.data;
-                  final progress = durationState?.progress ?? Duration.zero;
-                  final total = durationState?.total ?? Duration.zero;
+    return Container(
+      color: Colors.white,
+      child: Column(
+        children: [
+          Container(
+              padding: EdgeInsets.only(right: 25),
+              child: _currentPlayingButton()),
+          Container(
+            margin: const EdgeInsets.only(top: 4.0, left: 32.0, right: 32.0),
+            child: StreamBuilder<DurationStatusBar>(
+              stream: _durationStateStream,
+              builder: (context, snapshot) {
+                final durationState = snapshot.data;
+                final progress = durationState?.progress ?? Duration.zero;
+                final total = durationState?.total ?? Duration.zero;
 
-                  return ProgressBar(
-                    progress: progress,
-                    total: total,
-                    onSeek: (duration) {
-                      //拖动进度条
-                      _player.seek(duration);
-                    },
-                  );
-                },
-              ),
+                return ProgressBar(
+                  progress: progress,
+                  total: total,
+                  onSeek: (duration) {
+                    //拖动进度条
+                    _player.seek(duration);
+                  },
+                );
+              },
             ),
-          ],
-        ),
-        Row(mainAxisSize: MainAxisSize.min, children: [
-          //随机播放按钮
-          StreamBuilder<bool>(
-            stream: _player.shuffleModeEnabledStream,
-            builder: (_, snapshot) {
-              return _shuffleButton(snapshot.data ??
-                  false); // ??表示前面如果有值就取前面，否则取后面和 snapshot.data ? snapshot.data : false 一样
-            },
           ),
-          //上一首按钮
-          StreamBuilder<SequenceState?>(
-            stream: _player.sequenceStateStream,
-            builder: (_, __) {
-              return _previousButton();
-            },
-          ),
-          //播放按钮
-          StreamBuilder<PlayerState>(
-            stream: _player.playerStateStream,
-            //Widget构建器
-            builder: (_, snapshot) {
-              final playerState = snapshot.data;
-              return _playerButton(playerState!);
-            },
-          ),
-          //下一首按钮
-          StreamBuilder<SequenceState?>(
-            stream: _player.sequenceStateStream,
-            builder: (_, __) {
-              return _nextButton();
-            },
-          ),
-          //循环播放按钮
-          StreamBuilder<LoopMode>(
-            stream: _player.loopModeStream,
-            builder: (context, snapshot) {
-              return _loopButton(context, snapshot.data ?? LoopMode.off);
-            },
-          )
-        ]),
-      ],
+          Row(mainAxisSize: MainAxisSize.min, children: [
+            //随机播放按钮
+            StreamBuilder<bool>(
+              stream: _player.shuffleModeEnabledStream,
+              builder: (_, snapshot) {
+                return _shuffleButton(snapshot.data ??
+                    false); // ??表示前面如果有值就取前面，否则取后面和 snapshot.data ? snapshot.data : false 一样
+              },
+            ),
+            //上一首按钮
+            StreamBuilder<SequenceState?>(
+              stream: _player.sequenceStateStream,
+              builder: (_, __) {
+                return _previousButton();
+              },
+            ),
+            //播放按钮
+            StreamBuilder<PlayerState>(
+              stream: _player.playerStateStream,
+              //Widget构建器
+              builder: (_, snapshot) {
+                final playerState = snapshot.data;
+                return _playerButton(playerState);
+              },
+            ),
+            //下一首按钮
+            StreamBuilder<SequenceState?>(
+              stream: _player.sequenceStateStream,
+              builder: (_, __) {
+                return _nextButton();
+              },
+            ),
+            //循环播放按钮
+            StreamBuilder<LoopMode>(
+              stream: _player.loopModeStream,
+              builder: (context, snapshot) {
+                return _loopButton(context, snapshot.data ?? LoopMode.off);
+              },
+            )
+          ]),
+        ],
+      ),
     );
   }
 }

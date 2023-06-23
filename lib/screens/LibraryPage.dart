@@ -1,9 +1,11 @@
 import 'dart:developer';
 
 import 'package:cloudjams/models/Playerlist.dart';
+import 'package:cloudjams/models/PlaylistProvider.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:on_audio_query/on_audio_query.dart';
+import 'package:provider/provider.dart';
 
 class LibraryPage extends StatefulWidget {
   const LibraryPage(this._onAudioQuery, this._player, {super.key});
@@ -18,6 +20,9 @@ class LibraryPage extends StatefulWidget {
 class _LibraryPageState extends State<LibraryPage> {
   @override
   Widget build(BuildContext context) {
+
+    final playlistProvider = Provider.of<PlaylistProvider>(context);
+
     return Column(children: [
       Expanded(
         child: FutureBuilder<List<SongModel>>(
@@ -61,9 +66,12 @@ class _LibraryPageState extends State<LibraryPage> {
                         type: ArtworkType.AUDIO,
                       ),
                       onTap: () async {
-                        //TODO 先把本地曲库作为播放列表
                         //首先创建播放列表然后添加给播放器
                         var playlist = Playerlist.createPlaylist(item.data!);
+                        //添加到playlists
+                        playlistProvider.createPlaylist('default');
+                        playlistProvider.addSongsToPlaylist('default', item.data!);
+
                         await widget._player
                             .setAudioSource(playlist, initialIndex: index)
                             .catchError((error) {
