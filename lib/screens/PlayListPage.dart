@@ -1,11 +1,11 @@
-import 'package:cloudjams/screens/commons/CurrentPlaylist.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:provider/provider.dart';
 
-import '../models/Playerlist.dart';
 import '../models/PlaylistProvider.dart';
+import 'commons/PlaylistDetailsScreen.dart';
 
 class PlayListPage extends StatefulWidget {
   const PlayListPage(this._player, {super.key});
@@ -25,8 +25,7 @@ class _PlayListPageState extends State<PlayListPage> {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.playlist_add_rounded),
-        //TODO 新建播放列表
-        onPressed: () {},
+        onPressed: () => newPlaylistDialog(context, playlistProvider),
       ),
       body: ListView.builder(
         itemCount: playlists.length,
@@ -37,14 +36,14 @@ class _PlayListPageState extends State<PlayListPage> {
           return ListTile(
             leading: playlist!.isNotEmpty
                 ? QueryArtworkWidget(
-                    artworkBorder: BorderRadius.zero,
-                    id: playlist![0].id,
-                    type: ArtworkType.AUDIO,
-                  )
+              artworkBorder: BorderRadius.zero,
+              id: playlist[0].id,
+              type: ArtworkType.AUDIO,
+            )
                 : Image.asset(
-                    "assets/images/music-placeholder.png",
-                    fit: BoxFit.cover,
-                  ),
+              "assets/images/music-placeholder.png",
+              fit: BoxFit.cover,
+            ),
             title: Text(playlistName),
             onTap: () {
               Navigator.push(
@@ -56,8 +55,7 @@ class _PlayListPageState extends State<PlayListPage> {
             trailing: IconButton(
               icon: const Icon(Icons.delete),
               onPressed: () {
-                // Delete the playlist
-                playlistProvider.deletePlaylist(playlistName);
+                deletePlaylistDialog(context, playlistProvider, playlistName);
               },
             ),
           );
@@ -67,60 +65,66 @@ class _PlayListPageState extends State<PlayListPage> {
   }
 }
 
-//Playlist details screen
-class PlaylistDetailsScreen extends StatelessWidget {
-  final String playlistName;
-  final AudioPlayer player;
+//Popup prompt creating new playlist
+Future newPlaylistDialog(BuildContext context,
+    PlaylistProvider playlistProvider) {
+  var textEditingController = TextEditingController();
 
-  const PlaylistDetailsScreen(this.playlistName, this.player, {super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    // Retrieve the selected playlist from the PlaylistProvider
-    final playlistProvider = Provider.of<PlaylistProvider>(context);
-    final playlist = playlistProvider.playlists[playlistName];
-
-    // Display the playlist details
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(playlistName),
-      ),
-      body: ListView.builder(
-          itemCount: playlist?.length,
-          itemBuilder: (context, index) {
-            return Container(
-              margin: const EdgeInsets.only(top: 15.0, left: 12.0, right: 16.0),
-              child: ListTile(
-                title: Text(playlist![index].title),
-                subtitle: Text(
-                  playlist[index].artist ?? '',
-                  style: const TextStyle(
-                    color: Colors.grey,
-                  ),
-                ),
-                //获取歌曲封面
-                leading: QueryArtworkWidget(
-                  id: playlist[index].id,
-                  type: ArtworkType.AUDIO,
-                ),
-                onTap: () async {
-                  //首先创建播放列表然后添加给播放器
-                  var currentPlaying = Playerlist.createPlaylist(playlist);
-
-                  await player.setAudioSource(currentPlaying,
-                      initialIndex: index);
-
-                  //然后播放点击的歌曲
-                  await player.play();
-                },
+  return showDialog(
+      context: context,
+      builder: (context) =>
+          AlertDialog(
+            title: const Text("Create new playlist"),
+            content: TextField(
+              autofocus: true,
+              decoration:
+              const InputDecoration(hintText: 'Enter your playlist name'),
+              controller: textEditingController,
+            ),
+            actions: [
+              TextButton(
+                child: const Text('Cancel'),
+                onPressed: () => Navigator.of(context).pop(),
               ),
-            );
-          }),
-      floatingActionButton: FloatingActionButton(
-        child: const Icon(Icons.add_rounded),
-        //TODO 添加歌曲
-        onPressed: () {},
-      ),
-    );
-  }
+              TextButton(
+                child: const Text('Confirm'),
+                onPressed: () {
+                  var text = textEditingController.text;
+
+                  if (text.isEmpty) {
+                    Fluttertoast.showToast(msg: 'Name Cannot Be Empty!');
+                  } else if (playlistProvider.playlists.containsKey(text)) {
+                    Fluttertoast.showToast(msg: 'Name Already Exists !');
+                  } else {
+                    playlistProvider.createPlaylist(text);
+                    Navigator.of(context).pop();
+                  }
+                },
+              )
+            ],
+          ));
+}
+
+//Delete dialog
+Future deletePlaylistDialog(BuildContext context, PlaylistProvider playlistProvider, String playlistName) {
+  return showDialog(
+      context: context,
+      builder: (context) =>
+          AlertDialog(
+            title: const Text("Are You Sure?"),
+            actions: [
+              TextButton(
+                child: const Text('No'),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+              TextButton(
+                onPressed: (){
+                  // Delete the playlist
+                  playlistProvider.deletePlaylist(playlistName);
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Yes'),
+              ),
+            ],
+          ));
 }
