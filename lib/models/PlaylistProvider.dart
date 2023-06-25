@@ -4,6 +4,11 @@ import 'package:on_audio_query/on_audio_query.dart';
 class PlaylistProvider extends ChangeNotifier {
   Map<String, List<SongModel>> playlists = {};
 
+  //TODO testing purpose
+  PlaylistProvider() {
+    createPlaylist('default');
+  }
+
   void createPlaylist(String name) {
     playlists[name] = [];
     notifyListeners();

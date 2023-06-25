@@ -135,7 +135,7 @@ class PlayerButtons extends StatelessWidget {
       child: Column(
         children: [
           Container(
-              padding: EdgeInsets.only(right: 25),
+              padding: const EdgeInsets.only(right: 25),
               child: _currentPlayingButton()),
           Container(
             margin: const EdgeInsets.only(top: 4.0, left: 32.0, right: 32.0),

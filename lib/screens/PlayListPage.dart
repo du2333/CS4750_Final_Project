@@ -52,12 +52,7 @@ class _PlayListPageState extends State<PlayListPage> {
                       builder: (context) =>
                           PlaylistDetailsScreen(playlistName, widget._player)));
             },
-            trailing: IconButton(
-              icon: const Icon(Icons.delete),
-              onPressed: () {
-                deletePlaylistDialog(context, playlistProvider, playlistName);
-              },
-            ),
+            onLongPress: () => deletePlaylistDialog(context, playlistProvider, playlistName),
           );
         },
       ),
@@ -111,7 +106,7 @@ Future deletePlaylistDialog(BuildContext context, PlaylistProvider playlistProvi
       context: context,
       builder: (context) =>
           AlertDialog(
-            title: const Text("Are You Sure?"),
+            title: const Text("Are You Sure to Delete this Playlist?"),
             actions: [
               TextButton(
                 child: const Text('No'),
