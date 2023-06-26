@@ -81,7 +81,7 @@ class _PlaylistDetailsScreenState extends State<PlaylistDetailsScreen> {
           ? FloatingActionButton(
               onPressed: () {
                 showDeleteSongDialog(context, playlistProvider, selectedSongs,
-                        playlist, selectedItem)
+                        playlist, selectedItem, widget.playlistName)
                     .then((_) {//得等到删除歌曲操作后再更新UI
                   setState(() {});
                 });
@@ -100,7 +100,8 @@ Future showDeleteSongDialog(
     PlaylistProvider playlistProvider,
     List<SongModel> selectedSongs,
     List<SongModel> songs,
-    Map<int, bool> selectedItem) {
+    Map<int, bool> selectedItem,
+    String playlistName) {
   return showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -115,9 +116,12 @@ Future showDeleteSongDialog(
                   // Delete songs
                   selectedItem.forEach((index, isSelected) {
                     if (isSelected) {
-                      songs.removeAt(index);
+                      final song = songs[index];
+                      playlistProvider.removeSongFromPlaylist(playlistName, song);
                     }
                   });
+                  //重置多选状态
+                  selectedItem.clear();
                   Navigator.of(context).pop();
                 },
                 child: const Text('Yes'),

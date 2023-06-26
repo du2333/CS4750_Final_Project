@@ -204,6 +204,7 @@ void showPlaylistSelection(
                       Navigator.of(context).pop();
 
                       selectedSongs.clear();
+                      selectedItem.clear();
                     },
                   );
                 },
