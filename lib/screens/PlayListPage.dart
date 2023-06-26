@@ -31,19 +31,22 @@ class _PlayListPageState extends State<PlayListPage> {
         itemCount: playlists.length,
         itemBuilder: (context, index) {
           final playlistName = playlists.keys.toList()[index];
+          if (playlistName == 'defaultPlaylist') {
+            return null;
+          }
           final playlist = playlists[playlistName];
 
           return ListTile(
             leading: playlist!.isNotEmpty
                 ? QueryArtworkWidget(
-              artworkBorder: BorderRadius.zero,
-              id: playlist[0].id,
-              type: ArtworkType.AUDIO,
-            )
+                    artworkBorder: BorderRadius.zero,
+                    id: playlist[0].id,
+                    type: ArtworkType.AUDIO,
+                  )
                 : Image.asset(
-              "assets/images/music-placeholder.png",
-              fit: BoxFit.cover,
-            ),
+                    "assets/images/music-placeholder.png",
+                    fit: BoxFit.cover,
+                  ),
             title: Text(playlistName),
             onTap: () {
               Navigator.push(
@@ -52,7 +55,8 @@ class _PlayListPageState extends State<PlayListPage> {
                       builder: (context) =>
                           PlaylistDetailsScreen(playlistName, widget._player)));
             },
-            onLongPress: () => deletePlaylistDialog(context, playlistProvider, playlistName),
+            onLongPress: () =>
+                deletePlaylistDialog(context, playlistProvider, playlistName),
           );
         },
       ),
@@ -61,19 +65,18 @@ class _PlayListPageState extends State<PlayListPage> {
 }
 
 //Popup prompt creating new playlist
-Future newPlaylistDialog(BuildContext context,
-    PlaylistProvider playlistProvider) {
+Future newPlaylistDialog(
+    BuildContext context, PlaylistProvider playlistProvider) {
   var textEditingController = TextEditingController();
 
   return showDialog(
       context: context,
-      builder: (context) =>
-          AlertDialog(
+      builder: (context) => AlertDialog(
             title: const Text("Create new playlist"),
             content: TextField(
               autofocus: true,
               decoration:
-              const InputDecoration(hintText: 'Enter your playlist name'),
+                  const InputDecoration(hintText: 'Enter your playlist name'),
               controller: textEditingController,
             ),
             actions: [
@@ -101,11 +104,11 @@ Future newPlaylistDialog(BuildContext context,
 }
 
 //Delete dialog
-Future deletePlaylistDialog(BuildContext context, PlaylistProvider playlistProvider, String playlistName) {
+Future deletePlaylistDialog(BuildContext context,
+    PlaylistProvider playlistProvider, String playlistName) {
   return showDialog(
       context: context,
-      builder: (context) =>
-          AlertDialog(
+      builder: (context) => AlertDialog(
             title: const Text("Are You Sure to Delete this Playlist?"),
             actions: [
               TextButton(
@@ -113,7 +116,7 @@ Future deletePlaylistDialog(BuildContext context, PlaylistProvider playlistProvi
                 onPressed: () => Navigator.of(context).pop(),
               ),
               TextButton(
-                onPressed: (){
+                onPressed: () {
                   // Delete the playlist
                   playlistProvider.deletePlaylist(playlistName);
                   Navigator.of(context).pop();

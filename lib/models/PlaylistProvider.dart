@@ -11,13 +11,29 @@ class PlaylistProvider extends ChangeNotifier {
 
   Database? database;
 
+  //Player status
+  String playlistName = '';
+  int currentIndex = 0;
+  Duration currentDuration = Duration.zero;
+
   // Initialize the provider
-  PlaylistProvider() {
+  PlaylistProvider._();
+
+
+  // 得保证获取了数据后才可以构建实例
+  static Future<PlaylistProvider> createInstance() async {
+    final provider = PlaylistProvider._();
+
     // Initialize the database
-    initializeDatabase().then((_) {
-      // Load playlists from the database
-      loadPlaylists();
-    });
+    await provider.initializeDatabase();
+
+    // Load playlists from the database
+    await provider.loadPlaylists();
+
+    // Load play status from the database
+    await provider.loadPlayStatus();
+
+    return provider;
   }
 
   // Initialize the database
@@ -31,10 +47,13 @@ class PlaylistProvider extends ChangeNotifier {
         onCreate: (Database db, int version) async {
       // Create the playlist table
       await db
-          .execute('CREATE TABLE playlist (id TEXT PRIMARY KEY, name TEXT)');
+          .execute('CREATE TABLE playlist (id INTEGER PRIMARY KEY, name TEXT)');
       // Create the song table
       await db.execute(
-          'CREATE TABLE song (id TEXT PRIMARY KEY, playlist_id TEXT, uri TEXT, album TEXT, album_id INTEGER, artist TEXT, artist_id INTEGER, title TEXT)');
+          'CREATE TABLE song (id TEXT INTEGER KEY, playlist_id TEXT, uri TEXT, album TEXT, album_id INTEGER, artist TEXT, artist_id INTEGER, title TEXT)');
+      // Create the play status table
+      await db.execute(
+          'CREATE TABLE play_status (id INTEGER PRIMARY KEY AUTOINCREMENT, playlist_name TEXT, current_index INTEGER, current_duration INTEGER)');
     });
   }
 
@@ -74,6 +93,24 @@ class PlaylistProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Load play status from the database
+  Future<void> loadPlayStatus() async {
+    Database? db = database;
+    if (db == null) return;
+
+    // Load play status
+    List<Map<String, dynamic>> playStatusData = await db.query('play_status');
+    if (playStatusData.isNotEmpty) {
+      var playStatus = playStatusData[0];
+      playlistName = playStatus['playlist_name'];
+      currentIndex = playStatus['current_index'];
+      int durationMilliseconds = playStatus['current_duration'];
+      currentDuration = Duration(milliseconds: durationMilliseconds);
+    }
+
+    notifyListeners();
+  }
+
 // Save playlists to the database
   Future<void> savePlaylists() async {
     Database? db = database;
@@ -96,7 +133,7 @@ class PlaylistProvider extends ChangeNotifier {
       // Insert songs for the playlist
       for (var song in songs) {
         await db.insert('song', {
-          'id': song.id.toString(),
+          'id': song.id,
           'playlist_id': playlistId,
           'uri': song.uri,
           'album': song.album,
@@ -107,6 +144,22 @@ class PlaylistProvider extends ChangeNotifier {
         });
       }
     }
+  }
+
+  // Save play status to the database
+  Future<void> savePlayStatus() async {
+    Database? db = database;
+    if (db == null) return;
+
+    // Clear existing play status
+    await db.delete('play_status');
+
+    // Insert play status into the database
+    await db.insert('play_status', {
+      'playlist_name': playlistName,
+      'current_index': currentIndex,
+      'current_duration': currentDuration.inMilliseconds,
+    });
   }
 
   // Create a playlist
@@ -137,6 +190,15 @@ class PlaylistProvider extends ChangeNotifier {
   void removeSongFromPlaylist(String playlistName, SongModel song) {
     playlists[playlistName]?.remove(song);
     savePlaylists().then((_) {
+      notifyListeners();
+    });
+  }
+
+  // Update the current index and duration
+  void updatePlayStatus(int index, Duration duration) {
+    currentIndex = index;
+    currentDuration = duration;
+    savePlayStatus().then((_) {
       notifyListeners();
     });
   }

@@ -55,7 +55,7 @@ class _PlaylistDetailsScreenState extends State<PlaylistDetailsScreen> {
                       isSelectItem = selectedItem.containsValue(true);
                     });
                   } else {
-                    var currentPlaying = Playlist.convertToPlaylist(playlist);
+                    var currentPlaying = Song.convertToPlaylist(playlist, widget.playlistName);
                     await widget._player
                         .setAudioSource(currentPlaying, initialIndex: index);
                     await widget._player.play();

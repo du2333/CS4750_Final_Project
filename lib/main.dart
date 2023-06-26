@@ -4,15 +4,18 @@ import 'navigation/TopBarNav.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
+
+  final playlistProvider = await PlaylistProvider.createInstance();
+
   runApp(
       ChangeNotifierProvider(
-        create: (_) => PlaylistProvider(),
+        create: (_) => playlistProvider,
         child: const MyApp(),
       )
   );

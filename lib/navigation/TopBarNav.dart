@@ -4,6 +4,10 @@ import 'package:cloudjams/screens/PlayingPage.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:on_audio_query/on_audio_query.dart';
+import 'package:provider/provider.dart';
+
+import '../models/Playlist.dart';
+import '../models/PlaylistProvider.dart';
 
 class TopBarNavigation extends StatefulWidget {
   const TopBarNavigation({super.key});
@@ -15,6 +19,7 @@ class TopBarNavigation extends StatefulWidget {
 class _TopBarNavigationState extends State<TopBarNavigation> {
   late AudioPlayer _player;
   late OnAudioQuery _audioQuery;
+  bool _isAudioSourceInitialized = false;
 
   @override
   void initState() {
@@ -26,10 +31,7 @@ class _TopBarNavigationState extends State<TopBarNavigation> {
     //获取读写权限
     requestStoragePermission();
 
-    // //添加播放列表
-    // _player.setAudioSource().catchError((error) {
-    //   log("An error occurred $error");
-    // });
+    _initializeAudioSource();
   }
 
   //Destructor
@@ -38,6 +40,27 @@ class _TopBarNavigationState extends State<TopBarNavigation> {
     _player.dispose();
     super.dispose();
   }
+
+  Future<void> _initializeAudioSource() async {
+    final playlistProvider = Provider.of<PlaylistProvider>(context, listen: false);
+    final playlist = Song.convertToPlaylist(
+      playlistProvider.playlists[playlistProvider.playlistName] ?? [],
+      playlistProvider.playlistName,
+    );
+    final currentIndex = playlistProvider.currentIndex;
+    final currentDuration = playlistProvider.currentDuration;
+    if (playlist.length != 0) {
+      await _player.setAudioSource(
+        playlist,
+        initialIndex: currentIndex,
+        initialPosition: currentDuration,
+      );
+    }
+    setState(() {
+      _isAudioSourceInitialized = true;
+    });
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +88,9 @@ class _TopBarNavigationState extends State<TopBarNavigation> {
             TabBarView(
               children: [
                 PlayListPage(_player),
-                PlayingPage(_player),
+                _isAudioSourceInitialized ? PlayingPage(_player) : const Center(
+                  child: CircularProgressIndicator(),
+                ),
                 LibraryPage(_audioQuery, _player),
               ],
             ),

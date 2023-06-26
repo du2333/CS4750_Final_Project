@@ -38,7 +38,6 @@ class _PlayingPageState extends State<PlayingPage> {
           builder: (context, snapshot) {
             final state = snapshot.data;
             return Column(
-              //mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
                   width: 300,
@@ -48,7 +47,7 @@ class _PlayingPageState extends State<PlayingPage> {
                   child: state != null
                       ? QueryArtworkWidget(
                           artworkBorder: BorderRadius.circular(20.0),
-                          id: state.currentSource!.tag.id,
+                          id: state.currentSource!.tag.song.id,
                           type: ArtworkType.AUDIO,
                           format: ArtworkFormat.PNG,
                           size: 400,
@@ -59,12 +58,12 @@ class _PlayingPageState extends State<PlayingPage> {
                         ),
                 ),
                 Text(
-                  state != null ? state.currentSource!.tag.title : '',
+                  state != null ? state.currentSource!.tag.song.title : '',
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Text(state != null ? state.currentSource!.tag.artist : ''),
+                Text(state != null ? state.currentSource!.tag.song.artist : ''),
               ],
             );
           },
@@ -72,6 +71,7 @@ class _PlayingPageState extends State<PlayingPage> {
         panel: CurrentPlaylist(
           widget._player,
           onTap: controller.hide,
+          currentPlaylistName: widget._player.sequence?[widget._player.currentIndex!].tag.playlistName ?? '',
         ),
         footer: PlayerButtons(widget._player, onTap: controller.show),
       ),

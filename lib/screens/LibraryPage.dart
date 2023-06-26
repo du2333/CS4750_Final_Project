@@ -77,9 +77,17 @@ class _LibraryPageState extends State<LibraryPage> {
                         }
                         //没有激活多选模式
                         else {
+                          const name = 'defaultPlaylist';
+
                           //首先创建播放列表然后添加给播放器
                           var playlist =
-                              Playlist.convertToPlaylist(item.data!);
+                              Song.convertToPlaylist(item.data!, name);
+
+                          if(playlistProvider.playlists.containsKey(name)) {
+                            playlistProvider.deletePlaylist(name);
+                          }
+                          playlistProvider.createPlaylist(name);
+                          playlistProvider.addSongsToPlaylist(name, item.data!);
 
                           await widget._player.setAudioSource(playlist,
                               initialIndex: index);

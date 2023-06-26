@@ -1,16 +1,16 @@
 import 'package:just_audio/just_audio.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
-class Playlist {
-  String name;
-  List<SongModel> songs;
+class Song {
+  String playlistName;
+  SongModel song;
 
-  Playlist(this.name, this.songs);
+  Song(this.playlistName, this.song);
 
-  static ConcatenatingAudioSource convertToPlaylist(List<SongModel> songs) {
+  static ConcatenatingAudioSource convertToPlaylist(List<SongModel> songs, String playlistName) {
     List<AudioSource> sources = [];
     for (var song in songs) {
-      sources.add(AudioSource.uri(Uri.parse(song.uri!), tag: song));
+      sources.add(AudioSource.uri(Uri.parse(song.uri!), tag: Song(playlistName, song)));
     }
     return ConcatenatingAudioSource(children: sources);
   }
