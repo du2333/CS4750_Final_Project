@@ -32,31 +32,32 @@ class _PlayListPageState extends State<PlayListPage> {
         itemBuilder: (context, index) {
           final playlistName = playlists.keys.toList()[index];
           if (playlistName == 'defaultPlaylist') {
-            return null;
+            return const SizedBox.shrink();
           }
           final playlist = playlists[playlistName];
 
-          return ListTile(
-            leading: playlist!.isNotEmpty
-                ? QueryArtworkWidget(
-                    artworkBorder: BorderRadius.zero,
-                    id: playlist[0].id,
-                    type: ArtworkType.AUDIO,
-                  )
-                : Image.asset(
-                    "assets/images/music-placeholder.png",
-                    fit: BoxFit.cover,
-                  ),
-            title: Text(playlistName),
-            onTap: () {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) =>
-                          PlaylistDetailsScreen(playlistName, widget._player)));
-            },
-            onLongPress: () =>
-                deletePlaylistDialog(context, playlistProvider, playlistName),
+          return Container(
+            margin: const EdgeInsets.only(
+                top: 15.0, left: 12.0, right: 16.0),
+            child: ListTile(
+              leading: playlist!.isNotEmpty
+                  ? QueryArtworkWidget(
+                      artworkBorder: BorderRadius.zero,
+                      id: playlist[0].id,
+                      type: ArtworkType.AUDIO,
+                    )
+                  : const Icon(Icons.playlist_add_check_outlined, size: 50.0,),
+              title: Text(playlistName),
+              onTap: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            PlaylistDetailsScreen(playlistName, widget._player)));
+              },
+              onLongPress: () =>
+                  deletePlaylistDialog(context, playlistProvider, playlistName),
+            ),
           );
         },
       ),

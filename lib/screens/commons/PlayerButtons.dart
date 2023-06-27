@@ -17,7 +17,7 @@ class PlayerButtons extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
         IconButton(
-          icon: const Icon(Icons.playlist_play_rounded),
+          icon: const Icon(Icons.queue_music),
           iconSize: 36,
           onPressed: () => onTap(),
         ),
@@ -73,7 +73,7 @@ class PlayerButtons extends StatelessWidget {
 
   Widget _previousButton() {
     return IconButton(
-      icon: const Icon(Icons.skip_previous),
+      icon: const Icon(Icons.fast_rewind),
       iconSize: 54.0,
       onPressed: () {
         if (_player.hasPrevious) {
@@ -85,7 +85,7 @@ class PlayerButtons extends StatelessWidget {
 
   Widget _nextButton() {
     return IconButton(
-      icon: const Icon(Icons.skip_next),
+      icon: const Icon(Icons.fast_forward),
       iconSize: 54.0,
       onPressed: () {
         if (_player.hasNext) {
@@ -131,7 +131,7 @@ class PlayerButtons extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.white,
+      color: Theme.of(context).colorScheme.background,
       child: Column(
         children: [
           Container(

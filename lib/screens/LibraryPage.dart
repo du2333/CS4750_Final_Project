@@ -30,11 +30,7 @@ class _LibraryPageState extends State<LibraryPage> {
     return Stack(
       children: [
         FutureBuilder<List<SongModel>>(
-          future: widget._onAudioQuery.querySongs(
-            orderType: OrderType.ASC_OR_SMALLER,
-            uriType: UriType.EXTERNAL,
-            ignoreCase: true,
-          ),
+          future: scanSongs(widget._onAudioQuery),
           builder: (context, item) {
             //如果还没加载完歌曲就转圈圈
             if (item.data == null) {
@@ -83,14 +79,14 @@ class _LibraryPageState extends State<LibraryPage> {
                           var playlist =
                               Song.convertToPlaylist(item.data!, name);
 
-                          if(playlistProvider.playlists.containsKey(name)) {
+                          if (playlistProvider.playlists.containsKey(name)) {
                             playlistProvider.deletePlaylist(name);
                           }
                           playlistProvider.createPlaylist(name);
                           playlistProvider.addSongsToPlaylist(name, item.data!);
 
-                          await widget._player.setAudioSource(playlist,
-                              initialIndex: index);
+                          await widget._player
+                              .setAudioSource(playlist, initialIndex: index);
 
                           //然后播放点击的歌曲
                           await widget._player.play();
@@ -145,6 +141,19 @@ Widget trailingContent(bool isSelected, BuildContext context) {
   }
 }
 
+//扫描时长大于30秒的歌曲
+Future<List<SongModel>> scanSongs(OnAudioQuery onAudioQuery) async {
+  // Query all songs
+  List<SongModel> allSongs = await onAudioQuery.querySongs();
+
+  // Filter songs longer than 30 seconds
+  List<SongModel> songsLongerThan30Seconds = allSongs
+      .where((song) => song.duration != null && song.duration! > 30 * 1000) // Convert duration to milliseconds
+      .toList();
+
+  return songsLongerThan30Seconds;
+}
+
 //卡片展示可选的播放列表
 void showPlaylistSelection(
     BuildContext context,
@@ -176,6 +185,9 @@ void showPlaylistSelection(
                 itemBuilder: (context, index) {
                   final playlistName =
                       playlistProvider.playlists.keys.toList()[index];
+                  if (playlistName == 'defaultPlaylist') {
+                    return const SizedBox.shrink();
+                  }
                   return ListTile(
                     title: Text(playlistName),
                     onTap: () {

@@ -24,7 +24,7 @@ class _PlayingPageState extends State<PlayingPage> {
     return Scaffold(
       body: WeSlide(
         controller: controller,
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.background,
         panelMinSize: panelMinSize,
         panelMaxSize: panelMaxSize * 0.7,
         parallax: true,
@@ -42,7 +42,7 @@ class _PlayingPageState extends State<PlayingPage> {
                 Container(
                   width: 300,
                   height: 300,
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.background,
                   margin: const EdgeInsets.only(top: 30, bottom: 30),
                   child: state != null
                       ? QueryArtworkWidget(

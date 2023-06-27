@@ -54,10 +54,10 @@ class _CurrentPlaylistState extends State<CurrentPlaylist> with WidgetsBindingOb
     if (state == AppLifecycleState.paused) {
       savePlayStatus();
       startPeriodicSaving();
-      super.didChangeAppLifecycleState(state);
     } else if(state == AppLifecycleState.resumed) {
       stopPeriodicSaving();
     }
+    super.didChangeAppLifecycleState(state);
   }
 
   Future<void> savePlayStatus() async {
@@ -71,7 +71,7 @@ class _CurrentPlaylistState extends State<CurrentPlaylist> with WidgetsBindingOb
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.white,
+      color: Theme.of(context).colorScheme.background,
       child: Column(
         children: [
           SizedBox(

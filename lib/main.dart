@@ -1,6 +1,6 @@
 import 'package:cloudjams/models/PlaylistProvider.dart';
+import 'package:cloudjams/screens/Splash.dart';
 import 'package:flutter/material.dart';
-import 'navigation/TopBarNav.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
 
@@ -13,12 +13,10 @@ Future<void> main() async {
 
   final playlistProvider = await PlaylistProvider.createInstance();
 
-  runApp(
-      ChangeNotifierProvider(
-        create: (_) => playlistProvider,
-        child: const MyApp(),
-      )
-  );
+  runApp(ChangeNotifierProvider(
+    create: (_) => playlistProvider,
+    child: const MyApp(),
+  ));
 }
 
 class MyApp extends StatelessWidget {
@@ -32,7 +30,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
         useMaterial3: true,
       ),
-      home: const TopBarNavigation(),
+      home: const SplashScreen(),
     );
   }
 }
