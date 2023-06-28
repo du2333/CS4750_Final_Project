@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "484942532845",
+    "project_id": "cs4750-23f0e",
+    "storage_bucket": "cs4750-23f0e.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:484942532845:android:f8e779a0b240c73cf0fce4",
+        "android_client_info": {
+          "package_name": "com.zephyrrr.cloudjams"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "484942532845-f3p3ltanqqhe7m6ot1tuvm2j6n0321la.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDOSlnDma-UNWspBJ_PUXtJisM9GHJP0rI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "484942532845-f3p3ltanqqhe7m6ot1tuvm2j6n0321la.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
