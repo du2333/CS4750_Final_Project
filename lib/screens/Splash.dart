@@ -1,3 +1,4 @@
+import 'package:cloudjams/screens/UserPage.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:on_audio_query/on_audio_query.dart';
@@ -42,7 +43,7 @@ class _SplashScreenState extends State<SplashScreen> {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (context) => TopBarNavigation(
+        builder: (context) => /*UserPage()*/ TopBarNavigation(
           player: _player,
           audioQuery: _audioQuery,
         ),
