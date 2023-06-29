@@ -102,7 +102,7 @@ class _PlayListPageState extends State<PlayListPage> {
     return showDialog(
         context: context,
         builder: (context) => AlertDialog(
-              title: const Text("Create new playlist"),
+              title: const Text("Create a new playlist"),
               content: TextField(
                 autofocus: true,
                 decoration:
@@ -122,9 +122,48 @@ class _PlayListPageState extends State<PlayListPage> {
                     if (text.isEmpty) {
                       Fluttertoast.showToast(msg: 'Name Cannot Be Empty!');
                     } else if (playlistProvider.playlists.containsKey(text)) {
-                      Fluttertoast.showToast(msg: 'Name Already Exists !');
+                      Fluttertoast.showToast(msg: 'Name Already Exists!');
                     } else {
                       playlistProvider.createPlaylist(text);
+                      Navigator.of(context).pop();
+                    }
+                  },
+                )
+              ],
+            ));
+  }
+
+  Future renamePlaylistDialog(
+      PlaylistProvider playlistProvider, String playlistname) {
+    var textEditingController = TextEditingController();
+    textEditingController.text = playlistname;
+
+    return showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+              title: const Text("Rename"),
+              content: TextField(
+                autofocus: true,
+                decoration: const InputDecoration(
+                    hintText: 'Enter your new playlist name'),
+                controller: textEditingController,
+              ),
+              actions: [
+                TextButton(
+                  child: const Text('Cancel'),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+                TextButton(
+                  child: const Text('Confirm'),
+                  onPressed: () {
+                    var text = textEditingController.text;
+
+                    if (text.isEmpty) {
+                      Fluttertoast.showToast(msg: 'Name Cannot Be Empty!');
+                    } else if (playlistProvider.playlists.containsKey(text)) {
+                      Fluttertoast.showToast(msg: 'Name Already Exists!');
+                    } else {
+                      playlistProvider.renamePlaylist(text, playlistname);
                       Navigator.of(context).pop();
                     }
                   },
@@ -156,7 +195,7 @@ class _PlayListPageState extends State<PlayListPage> {
         ]);
 
     if (result == 'option1') {
-      //TODO rename the playlist
+      renamePlaylistDialog(playlistProvider, playlistName);
     } else if (result == 'option2') {
       deletePlaylistDialog(playlistProvider, playlistName);
     }

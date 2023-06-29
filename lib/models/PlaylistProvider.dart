@@ -19,7 +19,6 @@ class PlaylistProvider extends ChangeNotifier {
   // Initialize the provider
   PlaylistProvider._();
 
-
   // 得保证获取了数据后才可以构建实例
   static Future<PlaylistProvider> createInstance() async {
     final provider = PlaylistProvider._();
@@ -201,5 +200,17 @@ class PlaylistProvider extends ChangeNotifier {
     savePlayStatus().then((_) {
       notifyListeners();
     });
+  }
+
+  //Rename the playlist
+  void renamePlaylist(String newName, String oldName) {
+    if (playlists.containsKey(oldName)) {
+      List<SongModel> songs = playlists[oldName]!;
+      playlists.remove(oldName);
+      playlists[newName] = songs;
+      savePlaylists().then((_) {
+        notifyListeners();
+      });
+    }
   }
 }
