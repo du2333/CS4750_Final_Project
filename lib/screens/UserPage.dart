@@ -1,5 +1,6 @@
 import 'package:cloudjams/screens/commons/Authentication.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class UserPage extends StatefulWidget {
   const UserPage({super.key});
@@ -9,81 +10,143 @@ class UserPage extends StatefulWidget {
 }
 
 class _UserPageState extends State<UserPage> {
-  TextEditingController userNameController = TextEditingController();
+  TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
+  TextEditingController usernameController = TextEditingController();
+  TextEditingController confirmController = TextEditingController();
   final Authentication _authentication = Authentication();
+  bool showSignupFields = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: const Text('Sign In'),
+          title: Text(showSignupFields ? 'Sign up' : 'Sign in'),
         ),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              TextField(
-                controller: userNameController,
-                obscureText: false,
-                decoration: const InputDecoration(
-                    border: OutlineInputBorder(), labelText: 'Username'),
+        body: Stack(
+          children: [
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    margin:
+                        const EdgeInsets.only(left: 30, right: 30, bottom: 15),
+                    child: TextField(
+                      controller: emailController,
+                      obscureText: false,
+                      decoration: const InputDecoration(
+                          border: OutlineInputBorder(), labelText: 'Email'),
+                    ),
+                  ),
+                  if (showSignupFields)
+                    Container(
+                      margin: const EdgeInsets.only(
+                          left: 30, right: 30, bottom: 15),
+                      child: TextField(
+                        controller: usernameController,
+                        obscureText: false,
+                        decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            labelText: 'Username'),
+                      ),
+                    ),
+                  Container(
+                    margin:
+                        const EdgeInsets.only(left: 30, right: 30, bottom: 15),
+                    child: TextField(
+                      controller: passwordController,
+                      obscureText: true,
+                      decoration: const InputDecoration(
+                          border: OutlineInputBorder(), labelText: 'Password'),
+                    ),
+                  ),
+                  if (showSignupFields)
+                    Container(
+                      margin: const EdgeInsets.only(
+                          left: 30, right: 30, bottom: 15),
+                      child: TextField(
+                        controller: confirmController,
+                        obscureText: true,
+                        decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            labelText: 'Confirm password'),
+                      ),
+                    ),
+                  SizedBox(
+                    width: 120,
+                    child: ElevatedButton(
+                        style: ButtonStyle(
+                          shape: MaterialStateProperty.all(
+                              RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(15))),
+                        ),
+                        onPressed: () {
+                          if (!showSignupFields) {
+                            _authentication
+                                .signInWithEmailAndPassword(
+                                    email: emailController.text,
+                                    password: passwordController.text)
+                                .then((value) {
+                              Fluttertoast.showToast(msg: 'Welcome! ${value.user?.displayName}');
+                              Navigator.pop(context);
+                            }).catchError((error) {
+                              Fluttertoast.showToast(msg: error.toString());
+                            });
+                          } else {
+                            if (emailController.text.isEmpty ||
+                                usernameController.text.isEmpty ||
+                                passwordController.text.isEmpty ||
+                                confirmController.text.isEmpty) {
+                              Fluttertoast.showToast(msg: 'Fields cannot be empty!');
+                              return;
+                            }
+                            if (passwordController.text !=
+                                confirmController.text) {
+                              Fluttertoast.showToast(
+                                  msg: "Password doesn't match!");
+                              return;
+                            }
+                            _authentication
+                                .createUserWithEmailAndPassword(
+                                    email: emailController.text,
+                                    password: passwordController.text)
+                                .then((userCredential) {
+                              Fluttertoast.showToast(
+                                  msg: 'Registered successfully!');
+                              userCredential.user!.updateDisplayName(usernameController.text);
+                              Navigator.pop(context);
+                            }).catchError((error) {
+                              Fluttertoast.showToast(msg: error.toString());
+                            });
+                          }
+                        },
+                        child: Text(showSignupFields ? 'Sign up' : 'Sign in')),
+                  ),
+                ],
               ),
-              TextField(
-                controller: passwordController,
-                obscureText: true,
-                decoration: const InputDecoration(
-                    border: OutlineInputBorder(), labelText: 'Password'),
+            ),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    showSignupFields = !showSignupFields;
+                  });
+                },
+                child: Container(
+                    margin: const EdgeInsets.only(bottom: 15),
+                    child: Text(
+                      showSignupFields
+                          ? 'Already have an account?'
+                          : 'No account?',
+                      style: const TextStyle(
+                        decoration: TextDecoration.underline,
+                      ),
+                    )),
               ),
-              ElevatedButton(
-                  onPressed: () {
-                    _authentication
-                        .signInWithEmailAndPassword(
-                            email: userNameController.text,
-                            password: passwordController.text)
-                        .then((value) {
-                      print('===============Signed in================');
-                    }).catchError((error) {
-                      print('=======Failed=========');
-                      print(error.toString());
-                    });
-                  },
-                  child: const Text('Sign in')),
-              ElevatedButton(
-                  onPressed: () {
-                    _authentication
-                        .createUserWithEmailAndPassword(
-                            email: userNameController.text,
-                            password: passwordController.text)
-                        .then((value) {
-                      print('========Success!==========');
-                    }).catchError((error) {
-                      print('========Fail=============');
-                      print(error.toString());
-                    });
-                  },
-                  child: const Text('Sign up')),
-              ElevatedButton(
-                  onPressed: () {
-                    _authentication.signOut().then((value) {
-                      print('========Success Signed out!==========');
-                    }).catchError((error) {
-                      print('========Fail=============');
-                      print(error.toString());
-                    });
-                  },
-                  child: const Text('Sign out')),
-              StreamBuilder(
-                  stream: _authentication.userStateChanges,
-                  builder: (context, snapshot) {
-                    if (snapshot.data != null) {
-                      return const Text('User logged in');
-                    } else {
-                      return const Text('User Not logged in');
-                    }
-                  }),
-            ],
-          ),
+            ),
+          ],
         ));
   }
 }

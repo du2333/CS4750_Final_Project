@@ -1,10 +1,13 @@
 import 'package:cloudjams/models/Playlist.dart';
 import 'package:cloudjams/models/PlaylistProvider.dart';
+import 'package:cloudjams/screens/UserPage.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:provider/provider.dart';
+
+import 'commons/Authentication.dart';
 
 class LibraryPage extends StatefulWidget {
   const LibraryPage(this._onAudioQuery, this._player, {super.key});
@@ -22,6 +25,7 @@ class _LibraryPageState extends State<LibraryPage> {
   Map<int, bool> selectedItem = {};
   List<SongModel> songs = [];
   List<SongModel> selectedSongs = [];
+  final Authentication _authentication = Authentication();
 
   @override
   Widget build(BuildContext context) {
@@ -110,6 +114,16 @@ class _LibraryPageState extends State<LibraryPage> {
                 });
           },
         ),
+        Positioned(
+            bottom: 16.0,
+            right: 16.0,
+            child: FloatingActionButton(
+              onPressed: () {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => const UserPage()));
+              },
+              child: const Icon(Icons.person),
+            )),
         if (isSelectItem)
           Positioned(
             bottom: 16.0,
@@ -148,7 +162,9 @@ Future<List<SongModel>> scanSongs(OnAudioQuery onAudioQuery) async {
 
   // Filter songs longer than 30 seconds
   List<SongModel> songsLongerThan30Seconds = allSongs
-      .where((song) => song.duration != null && song.duration! > 30 * 1000) // Convert duration to milliseconds
+      .where((song) =>
+          song.duration != null &&
+          song.duration! > 30 * 1000) // Convert duration to milliseconds
       .toList();
 
   return songsLongerThan30Seconds;
