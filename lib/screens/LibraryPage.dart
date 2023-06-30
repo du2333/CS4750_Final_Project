@@ -13,6 +13,7 @@ import 'package:path/path.dart';
 import 'package:provider/provider.dart';
 
 import 'commons/Authentication.dart';
+import 'commons/Upload.dart';
 
 class LibraryPage extends StatefulWidget {
   const LibraryPage(this._onAudioQuery, this._player, {super.key});
@@ -35,12 +36,10 @@ class _LibraryPageState extends State<LibraryPage> {
   final storageRef = FirebaseStorage.instance.ref();
   static const String musicFolderPath = '/storage/emulated/0//Music';
 
-
   @override
   void initState() {
     super.initState();
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -208,6 +207,36 @@ class _LibraryPageState extends State<LibraryPage> {
     }
   }
 
+  // //Delete dialog
+  Future deleteSongDialog(BuildContext context, String path) {
+    return showDialog(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+              title: const Text("Are You Sure to Delete from Cloud?"),
+              actions: [
+                TextButton(
+                  child: const Text('No'),
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    final ref = storageRef.child(
+                        '/${_authentication.currentUser!.uid}/${basename(path)}');
+
+                    Navigator.of(dialogContext).pop();
+
+                    await ref.delete().then((value) {
+                      Fluttertoast.showToast(msg: "Delete Success!");
+                    }).catchError((error) {
+                      Fluttertoast.showToast(msg: 'An Error Occurred: $error');
+                    });
+                  },
+                  child: const Text('Yes'),
+                ),
+              ],
+            ));
+  }
+
   //尾部图标
   Widget buildFileWidget(String path, int index) {
     return FutureBuilder<bool>(
@@ -234,44 +263,29 @@ class _LibraryPageState extends State<LibraryPage> {
                 color: Colors.green,
               ),
               onPressed: () {
-                deleteSongDialog(context, path);
+                deleteSongDialog(context, path).then((value) {
+                  setState(() {});
+                });
               },
             );
           } else {
             syncMap[index] = false;
             //Handle upload
-            return IconButton(
-              icon: const Icon(Icons.cloud_upload_rounded),
-              onPressed: () {
-                setState(() {
-                  File file = File(path);
-                  final ref = storageRef.child('/${_authentication.currentUser!.uid}/${basename(file.path)}');
-                  final uploadTask = ref.putFile(file);
+            return UploadIconButton(
+              path: path,
+              uploadTask: (path) {
+                File file = File(path);
+                final ref = storageRef.child(
+                    '/${_authentication.currentUser!.uid}/${basename(file.path)}');
+                final uploadTask = ref.putFile(file);
 
-                  final progressUpdates = Stream.periodic(
-                          const Duration(seconds: 3),
-                          (_) => uploadTask.snapshot)
-                      .takeWhile(
-                          (snapshot) => snapshot.state == TaskState.running);
-
-                  final subscription =
-                      progressUpdates.listen((TaskSnapshot snapshot) {
-                    double progress =
-                        snapshot.bytesTransferred / snapshot.totalBytes * 100;
-                    Fluttertoast.showToast(
-                        msg: 'Uploading in progress: ${progress.round()}%');
-                  });
-
-                  uploadTask.whenComplete(() {
-                    subscription.cancel();
-                    Fluttertoast.showToast(msg: 'Completed!');
-                    setState(() {});
-                  }).catchError((error) {
-                    setState(() {
-                      Fluttertoast.showToast(msg: 'An Error Occurred $error');
-                    });
-                  });
+                uploadTask.whenComplete(() {
+                  Fluttertoast.showToast(msg: 'Completed!');
+                }).catchError((error) {
+                  Fluttertoast.showToast(msg: 'An Error Occurred $error');
                 });
+
+                return uploadTask;
               },
             );
           }
@@ -282,7 +296,8 @@ class _LibraryPageState extends State<LibraryPage> {
 
   Future<bool> checkIfFileExists(String path) async {
     try {
-      final reference = storageRef.child('/${_authentication.currentUser!.uid}/${basename(path)}');
+      final reference = storageRef
+          .child('/${_authentication.currentUser!.uid}/${basename(path)}');
       await reference.getDownloadURL();
       return true;
     } catch (e) {
@@ -298,43 +313,11 @@ class _LibraryPageState extends State<LibraryPage> {
     // Filter songs longer than 30 seconds
     List<SongModel> songsLongerThan30Seconds = allSongs
         .where((song) =>
-    song.duration != null &&
-        song.duration! > 30 * 1000) // Convert duration to milliseconds
+            song.duration != null &&
+            song.duration! > 30 * 1000) // Convert duration to milliseconds
         .toList();
 
     return songsLongerThan30Seconds;
-  }
-
-
-  //Delete dialog
-  Future deleteSongDialog(BuildContext context, String path) {
-    return showDialog(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-              title: const Text("Are You Sure to Delete from Cloud?"),
-              actions: [
-                TextButton(
-                  child: const Text('No'),
-                  onPressed: () => Navigator.of(dialogContext).pop(),
-                ),
-                TextButton(
-                  onPressed: () async {
-                    final ref = storageRef.child('/${_authentication.currentUser!.uid}/${basename(path)}');
-
-                    Navigator.of(dialogContext).pop();
-
-                    await ref.delete().then((value) {
-                      Fluttertoast.showToast(msg: "Delete Success!");
-                    }).catchError((error) {
-                      Fluttertoast.showToast(msg: 'An Error Occurred: $error');
-                    });
-
-                    setState(() {});
-                  },
-                  child: const Text('Yes'),
-                ),
-              ],
-            ));
   }
 
   //获取云端文件
@@ -366,7 +349,8 @@ class _LibraryPageState extends State<LibraryPage> {
 
     // Perform download for songs not present locally
     for (var songToDownload in songsToDownload) {
-      final cloudSongRef = storageRef.child('/${_authentication.currentUser!.uid}/$songToDownload');
+      final cloudSongRef = storageRef
+          .child('/${_authentication.currentUser!.uid}/$songToDownload');
       final localFilePath = '$musicFolderPath/$songToDownload';
       print('$localFilePath======================================');
       final downloadTask = cloudSongRef.writeToFile(File(localFilePath));
@@ -379,8 +363,6 @@ class _LibraryPageState extends State<LibraryPage> {
     }
   }
 }
-
-
 
 //卡片展示可选的播放列表
 void showPlaylistSelection(
