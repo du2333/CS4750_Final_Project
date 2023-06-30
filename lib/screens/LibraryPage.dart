@@ -1,10 +1,15 @@
+import 'dart:io';
+
 import 'package:cloudjams/models/Playlist.dart';
 import 'package:cloudjams/models/PlaylistProvider.dart';
 import 'package:cloudjams/screens/UserPage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:on_audio_query/on_audio_query.dart';
+import 'package:path/path.dart';
 import 'package:provider/provider.dart';
 
 import 'commons/Authentication.dart';
@@ -21,11 +26,13 @@ class LibraryPage extends StatefulWidget {
 
 class _LibraryPageState extends State<LibraryPage> {
   //记录多选
-  bool isSelectItem = false;
+  bool isMultiSelection = false;
   Map<int, bool> selectedItem = {};
+  Map<int, bool> syncMap = {};
   List<SongModel> songs = [];
   List<SongModel> selectedSongs = [];
   final Authentication _authentication = Authentication();
+  final storageRef = FirebaseStorage.instance.ref();
 
   @override
   Widget build(BuildContext context) {
@@ -64,15 +71,15 @@ class _LibraryPageState extends State<LibraryPage> {
                       onLongPress: () {
                         setState(() {
                           selectedItem[index] = !isSelectedData;
-                          isSelectItem = selectedItem.containsValue(true);
+                          isMultiSelection = selectedItem.containsValue(true);
                         });
                       },
                       onTap: () async {
                         //如果激活了多选模式
-                        if (isSelectItem) {
+                        if (isMultiSelection) {
                           setState(() {
                             selectedItem[index] = !isSelectedData;
-                            isSelectItem = selectedItem.containsValue(true);
+                            isMultiSelection = selectedItem.containsValue(true);
                           });
                         }
                         //没有激活多选模式
@@ -104,11 +111,9 @@ class _LibraryPageState extends State<LibraryPage> {
                         ),
                       ),
                       //获取歌曲封面
-                      leading: QueryArtworkWidget(
-                        id: item.data![index].id,
-                        type: ArtworkType.AUDIO,
-                      ),
-                      trailing: trailingContent(isSelectedData!, context),
+                      leading: headingContent(
+                          isSelectedData!, item.data![index].id, context),
+                      trailing: buildFileWidget(item.data![index].data, index),
                     ),
                   );
                 });
@@ -122,9 +127,18 @@ class _LibraryPageState extends State<LibraryPage> {
                 Navigator.push(context,
                     MaterialPageRoute(builder: (context) => const UserPage()));
               },
-              child: const Icon(Icons.person),
+              child: StreamBuilder<User?>(
+                stream: _authentication.userStateChanges,
+                builder: (context, snapshot) {
+                  if (snapshot.data != null) {
+                    return const Icon(Icons.person_rounded);
+                  } else {
+                    return const Icon(Icons.login_rounded);
+                  }
+                },
+              ),
             )),
-        if (isSelectItem)
+        if (isMultiSelection)
           Positioned(
             bottom: 16.0,
             right: 16.0,
@@ -139,19 +153,134 @@ class _LibraryPageState extends State<LibraryPage> {
       ],
     );
   }
-}
 
-//根据多选模式来渲染每行数据的尾部部勾选框
-Widget trailingContent(bool isSelected, BuildContext context) {
-  if (isSelected) {
-    return Icon(
-      isSelected ? Icons.check_box : Icons.check_box_outline_blank,
-      color: Theme.of(context).primaryColor,
+  //根据多选模式来渲染每行数据的头部部部勾选框
+  Widget headingContent(bool isSelected, int id, BuildContext context) {
+    if (isSelected && isMultiSelection) {
+      return Icon(
+        Icons.check_box_rounded,
+        color: Theme.of(context).primaryColor,
+      );
+    } else {
+      return QueryArtworkWidget(
+        id: id,
+        type: ArtworkType.AUDIO,
+      );
+    }
+  }
+
+  //尾部图标
+  Widget buildFileWidget(String path, int index) {
+    return FutureBuilder<bool>(
+      future: checkIfFileExists(path),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          // Display a loading indicator while checking the file existence
+          return const CircularProgressIndicator();
+        } else {
+          // Check if the file exists
+          bool fileExists = snapshot.data ?? false;
+
+          if (fileExists) {
+            syncMap[index] = true;
+            //Handle delete
+            return IconButton(
+              icon: const Icon(
+                Icons.cloud_done_rounded,
+                color: Colors.green,
+              ),
+              onPressed: () {
+                deleteSongDialog(context, path);
+              },
+            );
+          } else {
+            syncMap[index] = false;
+            //Handle upload
+            return IconButton(
+              icon: const Icon(Icons.cloud_upload_rounded),
+              onPressed: () {
+                setState(() {
+                  File file = File(path);
+                  final ref = storageRef.child('/test/${basename(file.path)}');
+                  final uploadTask = ref.putFile(file);
+
+                  final progressUpdates = Stream.periodic(
+                          const Duration(seconds: 3),
+                          (_) => uploadTask.snapshot)
+                      .takeWhile(
+                          (snapshot) => snapshot.state == TaskState.running);
+
+                  final subscription =
+                      progressUpdates.listen((TaskSnapshot snapshot) {
+                    double progress =
+                        snapshot.bytesTransferred / snapshot.totalBytes * 100;
+                    Fluttertoast.showToast(
+                        msg: 'Uploading in progress: ${progress.round()}%');
+                  });
+
+                  uploadTask.whenComplete(() {
+                    subscription.cancel();
+                    Fluttertoast.showToast(msg: 'Completed!');
+                    setState(() {});
+                  }).catchError((error) {
+                    setState(() {
+                      Fluttertoast.showToast(msg: 'An Error Occurred $error');
+                    });
+                  });
+                });
+              },
+            );
+          }
+        }
+      },
     );
-  } else {
-    return Container(
-      width: 0,
-    );
+  }
+
+  Future<bool> checkIfFileExists(String path) async {
+    try {
+      final reference = storageRef.child('/test/${basename(path)}');
+      await reference.getDownloadURL();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  //Delete dialog
+  Future deleteSongDialog(BuildContext context, String path) {
+    return showDialog(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+              title: const Text("Are You Sure to Delete from Cloud?"),
+              actions: [
+                TextButton(
+                  child: const Text('No'),
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    final ref = storageRef.child('/test/${basename(path)}');
+
+                    Navigator.of(dialogContext).pop();
+
+                    await ref.delete().then((value) {
+                      Fluttertoast.showToast(msg: "Delete Success!");
+                    }).catchError((error) {
+                      Fluttertoast.showToast(msg: 'An Error Occurred: $error');
+                    });
+
+                    setState(() {});
+                  },
+                  child: const Text('Yes'),
+                ),
+              ],
+            ));
+  }
+
+  //获取云端文件
+  Future<void> fetchFromCloud() async {
+    final ref = storageRef.child('/test');
+    final listResult = await ref.listAll();
   }
 }
 

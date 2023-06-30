@@ -43,7 +43,7 @@ class _SplashScreenState extends State<SplashScreen> {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (context) => /*UserPage()*/ TopBarNavigation(
+        builder: (context) => TopBarNavigation(
           player: _player,
           audioQuery: _audioQuery,
         ),

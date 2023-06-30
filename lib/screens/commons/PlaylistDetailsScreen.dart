@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 
 import '../../models/Playlist.dart';
 import '../../models/PlaylistProvider.dart';
-import '../LibraryPage.dart';
 
 class PlaylistDetailsScreen extends StatefulWidget {
   final String playlistName;
@@ -55,7 +54,8 @@ class _PlaylistDetailsScreenState extends State<PlaylistDetailsScreen> {
                       isSelectItem = selectedItem.containsValue(true);
                     });
                   } else {
-                    var currentPlaying = Song.convertToPlaylist(playlist, widget.playlistName);
+                    var currentPlaying =
+                        Song.convertToPlaylist(playlist, widget.playlistName);
                     await widget._player
                         .setAudioSource(currentPlaying, initialIndex: index);
                     await widget._player.play();
@@ -82,7 +82,8 @@ class _PlaylistDetailsScreenState extends State<PlaylistDetailsScreen> {
               onPressed: () {
                 showDeleteSongDialog(context, playlistProvider, selectedSongs,
                         playlist, selectedItem, widget.playlistName)
-                    .then((_) {//得等到删除歌曲操作后再更新UI
+                    .then((_) {
+                  //得等到删除歌曲操作后再更新UI
                   setState(() {});
                 });
               },
@@ -92,6 +93,19 @@ class _PlaylistDetailsScreenState extends State<PlaylistDetailsScreen> {
               width: 0,
             ),
     );
+  }
+
+  Widget trailingContent(bool isSelected, BuildContext context) {
+    if (isSelected) {
+      return Icon(
+        isSelected ? Icons.check_box : Icons.check_box_outline_blank,
+        color: Theme.of(context).primaryColor,
+      );
+    } else {
+      return Container(
+        width: 0,
+      );
+    }
   }
 }
 
@@ -117,7 +131,8 @@ Future showDeleteSongDialog(
                   selectedItem.forEach((index, isSelected) {
                     if (isSelected) {
                       final song = songs[index];
-                      playlistProvider.removeSongFromPlaylist(playlistName, song);
+                      playlistProvider.removeSongFromPlaylist(
+                          playlistName, song);
                     }
                   });
                   //重置多选状态
