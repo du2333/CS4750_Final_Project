@@ -129,27 +129,30 @@ class _LibraryPageState extends State<LibraryPage> {
         Positioned(
           bottom: 16.0,
           right: 90.0,
-          child: StreamBuilder<User?>(
-            stream: _authentication.userStateChanges,
-            builder: (context, snapshot) {
-              if (snapshot.data != null) {
-                return FloatingActionButton(
-                  onPressed: () {
-                    fetchFromCloud().then((value) {
-                      //make sure update the media file
-                      widget._onAudioQuery.scanMedia(musicFolderPath);
-                    });
-                    ;
-                  },
-                  child: const Icon(Icons.sync_rounded),
-                );
-              } else {
-                return Container(
+          child: isMultiSelection
+              ? Container(
                   width: 0,
-                );
-              }
-            },
-          ),
+                )
+              : StreamBuilder<User?>(
+                  stream: _authentication.userStateChanges,
+                  builder: (context, snapshot) {
+                    if (snapshot.data != null) {
+                      return FloatingActionButton(
+                        onPressed: () {
+                          fetchFromCloud().then((value) {
+                            //make sure update the media file
+                            widget._onAudioQuery.scanMedia(musicFolderPath);
+                          });
+                        },
+                        child: const Icon(Icons.sync_rounded),
+                      );
+                    } else {
+                      return Container(
+                        width: 0,
+                      );
+                    }
+                  },
+                ),
         ),
         //Login button
         Positioned(
@@ -168,9 +171,9 @@ class _LibraryPageState extends State<LibraryPage> {
                 stream: _authentication.userStateChanges,
                 builder: (context, snapshot) {
                   if (snapshot.data != null) {
-                    return const Icon(Icons.person_rounded);
-                  } else {
                     return const Icon(Icons.login_rounded);
+                  } else {
+                    return const Icon(Icons.person_rounded);
                   }
                 },
               ),
@@ -334,7 +337,6 @@ class _LibraryPageState extends State<LibraryPage> {
       final cloudSongRef = storageRef
           .child('/${_authentication.currentUser!.uid}/$songToDownload');
       final localFilePath = '$musicFolderPath/$songToDownload';
-      print('$localFilePath======================================');
       final downloadTask = cloudSongRef.writeToFile(File(localFilePath));
 
       await downloadTask.whenComplete(() {
