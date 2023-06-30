@@ -29,7 +29,6 @@ class _LibraryPageState extends State<LibraryPage> {
   //记录多选
   bool isMultiSelection = false;
   Map<int, bool> selectedItem = {};
-  Map<int, bool> syncMap = {};
   List<SongModel> songs = [];
   List<SongModel> selectedSongs = [];
   final Authentication _authentication = Authentication();
@@ -207,36 +206,6 @@ class _LibraryPageState extends State<LibraryPage> {
     }
   }
 
-  // //Delete dialog
-  Future deleteSongDialog(BuildContext context, String path) {
-    return showDialog(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-              title: const Text("Are You Sure to Delete from Cloud?"),
-              actions: [
-                TextButton(
-                  child: const Text('No'),
-                  onPressed: () => Navigator.of(dialogContext).pop(),
-                ),
-                TextButton(
-                  onPressed: () async {
-                    final ref = storageRef.child(
-                        '/${_authentication.currentUser!.uid}/${basename(path)}');
-
-                    Navigator.of(dialogContext).pop();
-
-                    await ref.delete().then((value) {
-                      Fluttertoast.showToast(msg: "Delete Success!");
-                    }).catchError((error) {
-                      Fluttertoast.showToast(msg: 'An Error Occurred: $error');
-                    });
-                  },
-                  child: const Text('Yes'),
-                ),
-              ],
-            ));
-  }
-
   //尾部图标
   Widget buildFileWidget(String path, int index) {
     return FutureBuilder<bool>(
@@ -254,41 +223,54 @@ class _LibraryPageState extends State<LibraryPage> {
           // Check if the file exists
           bool fileExists = snapshot.data ?? false;
 
-          if (fileExists) {
-            syncMap[index] = true;
-            //Handle delete
-            return IconButton(
-              icon: const Icon(
-                Icons.cloud_done_rounded,
-                color: Colors.green,
-              ),
-              onPressed: () {
-                deleteSongDialog(context, path).then((value) {
-                  setState(() {});
-                });
-              },
-            );
-          } else {
-            syncMap[index] = false;
-            //Handle upload
-            return UploadIconButton(
-              path: path,
-              uploadTask: (path) {
-                File file = File(path);
-                final ref = storageRef.child(
-                    '/${_authentication.currentUser!.uid}/${basename(file.path)}');
-                final uploadTask = ref.putFile(file);
+          return UploadIconButton(
+            path: path,
+            context: context,
+            completed: fileExists,
+            uploadTask: (path) {
+              File file = File(path);
+              final ref = storageRef.child(
+                  '/${_authentication.currentUser!.uid}/${basename(file.path)}');
+              final uploadTask = ref.putFile(file);
 
-                uploadTask.whenComplete(() {
-                  Fluttertoast.showToast(msg: 'Completed!');
-                }).catchError((error) {
-                  Fluttertoast.showToast(msg: 'An Error Occurred $error');
-                });
+              uploadTask.whenComplete(() {
+                Fluttertoast.showToast(msg: 'Completed!');
+              }).catchError((error) {
+                Fluttertoast.showToast(msg: 'An Error Occurred $error');
+              });
 
-                return uploadTask;
-              },
-            );
-          }
+              return uploadTask;
+            },
+            deleteTask: (context, path) {
+              showDialog(
+                  context: context,
+                  builder: (dialogContext) => AlertDialog(
+                        title: const Text("Are You Sure to Delete from Cloud?"),
+                        actions: [
+                          TextButton(
+                            child: const Text('No'),
+                            onPressed: () => Navigator.of(dialogContext).pop(),
+                          ),
+                          TextButton(
+                            onPressed: () async {
+                              final ref = storageRef.child(
+                                  '/${_authentication.currentUser!.uid}/${basename(path)}');
+
+                              Navigator.of(dialogContext).pop();
+
+                              await ref.delete().then((value) {
+                                Fluttertoast.showToast(msg: "Delete Success!");
+                              }).catchError((error) {
+                                Fluttertoast.showToast(
+                                    msg: 'An Error Occurred: $error');
+                              });
+                            },
+                            child: const Text('Yes'),
+                          ),
+                        ],
+                      ));
+            },
+          );
         }
       },
     );
