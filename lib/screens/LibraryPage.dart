@@ -33,6 +33,14 @@ class _LibraryPageState extends State<LibraryPage> {
   List<SongModel> selectedSongs = [];
   final Authentication _authentication = Authentication();
   final storageRef = FirebaseStorage.instance.ref();
+  static const String musicFolderPath = '/storage/emulated/0//Music';
+
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -119,13 +127,44 @@ class _LibraryPageState extends State<LibraryPage> {
                 });
           },
         ),
+        //Sync button
+        Positioned(
+          bottom: 16.0,
+          right: 90.0,
+          child: StreamBuilder<User?>(
+            stream: _authentication.userStateChanges,
+            builder: (context, snapshot) {
+              if (snapshot.data != null) {
+                return FloatingActionButton(
+                  onPressed: () {
+                    fetchFromCloud().then((value) {
+                      //make sure update the media file
+                      widget._onAudioQuery.scanMedia(musicFolderPath);
+                    });
+                    ;
+                  },
+                  child: const Icon(Icons.sync_rounded),
+                );
+              } else {
+                return Container(
+                  width: 0,
+                );
+              }
+            },
+          ),
+        ),
+        //Login button
         Positioned(
             bottom: 16.0,
             right: 16.0,
             child: FloatingActionButton(
               onPressed: () {
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => const UserPage()));
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const UserPage())).then((value) {
+                  setState(() {});
+                });
               },
               child: StreamBuilder<User?>(
                 stream: _authentication.userStateChanges,
@@ -174,6 +213,11 @@ class _LibraryPageState extends State<LibraryPage> {
     return FutureBuilder<bool>(
       future: checkIfFileExists(path),
       builder: (context, snapshot) {
+        if (isMultiSelection || _authentication.currentUser == null) {
+          return Container(
+            width: 0,
+          );
+        }
         if (snapshot.connectionState == ConnectionState.waiting) {
           // Display a loading indicator while checking the file existence
           return const CircularProgressIndicator();
@@ -201,7 +245,7 @@ class _LibraryPageState extends State<LibraryPage> {
               onPressed: () {
                 setState(() {
                   File file = File(path);
-                  final ref = storageRef.child('/test/${basename(file.path)}');
+                  final ref = storageRef.child('/${_authentication.currentUser!.uid}/${basename(file.path)}');
                   final uploadTask = ref.putFile(file);
 
                   final progressUpdates = Stream.periodic(
@@ -238,13 +282,29 @@ class _LibraryPageState extends State<LibraryPage> {
 
   Future<bool> checkIfFileExists(String path) async {
     try {
-      final reference = storageRef.child('/test/${basename(path)}');
+      final reference = storageRef.child('/${_authentication.currentUser!.uid}/${basename(path)}');
       await reference.getDownloadURL();
       return true;
     } catch (e) {
       return false;
     }
   }
+
+  //扫描时长大于30秒的歌曲
+  Future<List<SongModel>> scanSongs(OnAudioQuery onAudioQuery) async {
+    // Query all songs
+    List<SongModel> allSongs = await onAudioQuery.querySongs();
+
+    // Filter songs longer than 30 seconds
+    List<SongModel> songsLongerThan30Seconds = allSongs
+        .where((song) =>
+    song.duration != null &&
+        song.duration! > 30 * 1000) // Convert duration to milliseconds
+        .toList();
+
+    return songsLongerThan30Seconds;
+  }
+
 
   //Delete dialog
   Future deleteSongDialog(BuildContext context, String path) {
@@ -259,7 +319,7 @@ class _LibraryPageState extends State<LibraryPage> {
                 ),
                 TextButton(
                   onPressed: () async {
-                    final ref = storageRef.child('/test/${basename(path)}');
+                    final ref = storageRef.child('/${_authentication.currentUser!.uid}/${basename(path)}');
 
                     Navigator.of(dialogContext).pop();
 
@@ -279,25 +339,48 @@ class _LibraryPageState extends State<LibraryPage> {
 
   //获取云端文件
   Future<void> fetchFromCloud() async {
-    final ref = storageRef.child('/test');
+    final ref = storageRef.child('/${_authentication.currentUser!.uid}');
     final listResult = await ref.listAll();
+    int total = 0;
+    int downloaded = 0;
+
+    //local files
+    List<String> localFiles = songs.map((song) => basename(song.data)).toList();
+
+    // Songs in the cloud not present in local
+    List<String> songsToDownload = [];
+
+    for (var item in listResult.items) {
+      String cloudSongName = basename(item.name);
+      if (!localFiles.contains(cloudSongName)) {
+        songsToDownload.add(cloudSongName);
+      }
+    }
+
+    total = songsToDownload.length;
+    // If all songs in the cloud are present in local
+    if (songsToDownload.isEmpty) {
+      Fluttertoast.showToast(msg: 'All songs synced');
+      return;
+    }
+
+    // Perform download for songs not present locally
+    for (var songToDownload in songsToDownload) {
+      final cloudSongRef = storageRef.child('/${_authentication.currentUser!.uid}/$songToDownload');
+      final localFilePath = '$musicFolderPath/$songToDownload';
+      print('$localFilePath======================================');
+      final downloadTask = cloudSongRef.writeToFile(File(localFilePath));
+
+      await downloadTask.whenComplete(() {
+        downloaded++;
+        Fluttertoast.showToast(msg: 'Downloaded: $downloaded/$total');
+        setState(() {});
+      });
+    }
   }
 }
 
-//扫描时长大于30秒的歌曲
-Future<List<SongModel>> scanSongs(OnAudioQuery onAudioQuery) async {
-  // Query all songs
-  List<SongModel> allSongs = await onAudioQuery.querySongs();
 
-  // Filter songs longer than 30 seconds
-  List<SongModel> songsLongerThan30Seconds = allSongs
-      .where((song) =>
-          song.duration != null &&
-          song.duration! > 30 * 1000) // Convert duration to milliseconds
-      .toList();
-
-  return songsLongerThan30Seconds;
-}
 
 //卡片展示可选的播放列表
 void showPlaylistSelection(

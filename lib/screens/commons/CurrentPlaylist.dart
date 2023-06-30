@@ -8,7 +8,8 @@ import 'package:provider/provider.dart';
 import '../../models/PlaylistProvider.dart';
 
 class CurrentPlaylist extends StatefulWidget {
-  const CurrentPlaylist(this._player, {super.key, required this.onTap, this.currentPlaylistName = ''});
+  const CurrentPlaylist(this._player,
+      {super.key, required this.onTap, this.currentPlaylistName = ''});
 
   final Function onTap;
   final String currentPlaylistName;
@@ -18,8 +19,8 @@ class CurrentPlaylist extends StatefulWidget {
   State<CurrentPlaylist> createState() => _CurrentPlaylistState();
 }
 
-class _CurrentPlaylistState extends State<CurrentPlaylist> with WidgetsBindingObserver {
-
+class _CurrentPlaylistState extends State<CurrentPlaylist>
+    with WidgetsBindingObserver {
   late Timer? saveTimer;
 
   @override
@@ -38,7 +39,13 @@ class _CurrentPlaylistState extends State<CurrentPlaylist> with WidgetsBindingOb
 
   void startPeriodicSaving() {
     saveTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      savePlayStatus();
+      if (mounted) {
+        savePlayStatus(
+          widget.currentPlaylistName,
+          widget._player.currentIndex ?? 0,
+          widget._player.position,
+        );
+      }
     });
   }
 
@@ -52,19 +59,28 @@ class _CurrentPlaylistState extends State<CurrentPlaylist> with WidgetsBindingOb
   void didChangeAppLifecycleState(AppLifecycleState state) {
     //当app后台运行每5秒保存播放进度
     if (state == AppLifecycleState.paused) {
-      savePlayStatus();
+      savePlayStatus(
+        widget.currentPlaylistName,
+        widget._player.currentIndex ?? 0,
+        widget._player.position,
+      );
       startPeriodicSaving();
-    } else if(state == AppLifecycleState.resumed) {
+    } else if (state == AppLifecycleState.resumed) {
       stopPeriodicSaving();
     }
     super.didChangeAppLifecycleState(state);
   }
 
-  Future<void> savePlayStatus() async {
-    final playlistProvider = Provider.of<PlaylistProvider>(context, listen: false);
-    playlistProvider.playlistName = widget.currentPlaylistName;
-    playlistProvider.currentIndex = widget._player.currentIndex ?? 0;
-    playlistProvider.currentDuration = widget._player.position;
+  Future<void> savePlayStatus(
+    String playlistName,
+    int currentIndex,
+    Duration currentDuration,
+  ) async {
+    final playlistProvider =
+        Provider.of<PlaylistProvider>(context, listen: false);
+    playlistProvider.playlistName = playlistName;
+    playlistProvider.currentIndex = currentIndex;
+    playlistProvider.currentDuration = currentDuration;
     await playlistProvider.savePlayStatus();
   }
 

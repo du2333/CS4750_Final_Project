@@ -32,17 +32,22 @@ class _UserPageState extends State<UserPage> {
                   children: [
                     Container(
                       margin: const EdgeInsets.only(bottom: 12),
-                      child: const Text('How are you doing today?', style: TextStyle(
-                        fontSize: 16,
-                      ),),
+                      child: const Text(
+                        'How are you doing today?',
+                        style: TextStyle(
+                          fontSize: 16,
+                        ),
+                      ),
                     ),
                     Container(
                       margin: const EdgeInsets.only(bottom: 26),
-                      child: Text(_authentication.currentUser!.displayName ?? 'User',
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),),
+                      child: Text(
+                        _authentication.currentUser!.displayName ?? 'User',
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                     ElevatedButton(
                       style: ButtonStyle(
@@ -50,8 +55,10 @@ class _UserPageState extends State<UserPage> {
                             borderRadius: BorderRadius.circular(15))),
                       ),
                       onPressed: () {
-                        _authentication.signOut();
-                        setState(() {});
+                        _authentication.signOut().then((value) {
+                          Fluttertoast.showToast(msg: 'Sign out successfully');
+                          Navigator.pop(context);
+                        });
                       },
                       child: const Text('Logout'),
                     ),
