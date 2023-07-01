@@ -2,7 +2,7 @@
 
 CloudJams is a music player application that allows users to enjoy their favorite songs, create playlists, and seamlessly integrate with cloud storage for an enhanced music experience. With CloudJams, you can scan your local songs, access your personal cloud storage, and enjoy your music anywhere, anytime.
 
-[Download here]()
+[Download here](https://github.com/du2333/CS4750_final_project/releases/download/v1.0.0/app-release.apk)
 
 
 
