@@ -244,29 +244,29 @@ class _LibraryPageState extends State<LibraryPage> {
 
               return uploadTask;
             },
-            deleteTask: (context, path) {
-              showDialog(
+            deleteTask: (context, path) async {
+              return showDialog(
                   context: context,
                   builder: (dialogContext) => AlertDialog(
                         title: const Text("Are You Sure to Delete from Cloud?"),
                         actions: [
                           TextButton(
                             child: const Text('No'),
-                            onPressed: () => Navigator.of(dialogContext).pop(),
+                            onPressed: () => Navigator.of(dialogContext).pop(false),
                           ),
                           TextButton(
                             onPressed: () async {
                               final ref = storageRef.child(
                                   '/${_authentication.currentUser!.uid}/${basename(path)}');
 
-                              Navigator.of(dialogContext).pop();
+                              Navigator.of(dialogContext).pop(true);
 
-                              await ref.delete().then((value) {
+                              try {
+                                await ref.delete();
                                 Fluttertoast.showToast(msg: "Delete Success!");
-                              }).catchError((error) {
-                                Fluttertoast.showToast(
-                                    msg: 'An Error Occurred: $error');
-                              });
+                              } catch (error) {
+                                Fluttertoast.showToast(msg: 'An Error Occurred: $error');
+                              }
                             },
                             child: const Text('Yes'),
                           ),

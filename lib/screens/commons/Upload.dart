@@ -41,26 +41,34 @@ class _UploadIconButtonState extends State<UploadIconButton> {
             ),
       onPressed: completed
           ? () async {
-              await widget.deleteTask(widget.context, widget.path);
+              final confirmed =
+                  await widget.deleteTask(widget.context, widget.path);
 
-              setState(() {
+              if (confirmed) {
                 setState(() {
                   completed = false;
                 });
-              });
+              }
             }
           : () async {
               setState(() {
                 uploading = true;
               });
 
-              final uploadTask = widget.uploadTask(widget.path);
-              await uploadTask.whenComplete(() {
+              try {
+                final uploadTask = widget.uploadTask(widget.path);
+                await uploadTask.whenComplete(() {
+                  setState(() {
+                    completed = true;
+                    uploading = false;
+                  });
+                });
+              } catch (error) {
                 setState(() {
-                  completed = true;
+                  completed = false;
                   uploading = false;
                 });
-              });
+              }
             },
     );
   }
